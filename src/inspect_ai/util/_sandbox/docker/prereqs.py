@@ -39,7 +39,7 @@ async def validate_docker_engine(version: str = DOCKER_ENGINE_REQUIRED_VERSION) 
         return semver.Version.parse(version)
 
     await validate_version(
-        cmd=["docker", "version", "--format", "json"],
+        cmd=["docker", "version", "--format", "{{json .}}"],
         parse_fn=parse_version,
         required_version=version,
         feature="Docker Engine",
@@ -61,7 +61,7 @@ async def validate_docker_compose(
         return semver.Version.parse(version)
 
     await validate_version(
-        cmd=["docker", "compose", "version", "--format", "json"],
+        cmd=["docker", "compose", "version", "--format", "{{json .}}"],
         parse_fn=parse_version,
         required_version=version,
         feature="Docker Compose",
