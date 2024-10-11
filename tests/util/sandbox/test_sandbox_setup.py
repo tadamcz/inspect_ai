@@ -32,7 +32,6 @@ def check_foo() -> Solver:
     return solve
 
 
-@pytest.mark.slow
 def test_docker_sandbox_setup():
     def sample(file: str, target: str, setup: str) -> Sample:
         return Sample(
