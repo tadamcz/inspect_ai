@@ -1,4 +1,4 @@
-from test_helpers.utils import skip_if_no_google
+from test_helpers.utils import skip_if_no_google, skip_if_trio
 
 from inspect_ai import Task, eval
 from inspect_ai.dataset import Sample
@@ -57,12 +57,14 @@ def test_completion_choice_malformed_function_call():
         grounding_metadata=None,
         index=None,
         logprobs_result=None,
-        safety_ratings=None
+        safety_ratings=None,
     )
 
     choice = completion_choice_from_candidate(candidate)
-    
+
     # Verify the conversion
     assert choice.message.content == ""  # Empty content for malformed calls
     assert choice.stop_reason == "unknown"  # MALFORMED_FUNCTION_CALL maps to "unknown"
-    assert choice.message.tool_calls is None  # No tool calls for malformed function calls
+    assert (
+        choice.message.tool_calls is None
+    )  # No tool calls for malformed function calls
