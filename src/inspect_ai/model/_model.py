@@ -57,7 +57,7 @@ from inspect_ai.tool import Tool, ToolChoice, ToolFunction, ToolInfo
 from inspect_ai.tool._tool import ToolSource
 from inspect_ai.tool._tool_call import ToolCallModelInputHints
 from inspect_ai.tool._tool_def import ToolDef, tool_defs
-from inspect_ai.util import concurrency
+from inspect_ai.util import concurrency, LimitExceededError
 from inspect_ai.util._limit import (
     check_message_limit,
     check_token_limit,
@@ -696,7 +696,16 @@ class Model:
         # call the model (this will so retries, etc., so report waiting time
         # as elapsed time - actual time for successful model call)
         time_start = time.monotonic()
-        model_output, event = await generate()
+        # Hacky approach in our fork of Inspect for Gemini 2.5 evaluations
+        try:
+            model_output, event = await generate()
+        except Exception as e:
+            raise LimitExceededError(
+                type="custom",
+                message=f"Failed after {config.max_retries} retries: {e}",
+                limit=config.max_retries,
+                value=config.max_retries,
+            )
         total_time = time.monotonic() - time_start
         if model_output.time:
             report_sample_waiting_time(total_time - model_output.time)
