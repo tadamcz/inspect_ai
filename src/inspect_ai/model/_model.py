@@ -705,7 +705,7 @@ class Model:
                 message=f"Failed after {config.max_retries} retries: {e}",
                 limit=config.max_retries,
                 value=config.max_retries,
-            )
+            ) from e
         total_time = time.monotonic() - time_start
         if model_output.time:
             report_sample_waiting_time(total_time - model_output.time)
