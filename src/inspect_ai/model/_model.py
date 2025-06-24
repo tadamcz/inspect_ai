@@ -700,6 +700,7 @@ class Model:
         try:
             model_output, event = await generate()
         except Exception as e:
+            print(f"Raising LimitExceededError (failed after {config.max_retries} retries): {e}")
             raise LimitExceededError(
                 type="custom",
                 message=f"Failed after {config.max_retries} retries: {e}",
