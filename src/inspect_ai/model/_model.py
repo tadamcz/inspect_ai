@@ -700,13 +700,17 @@ class Model:
         try:
             model_output, event = await generate()
         except Exception as e:
-            print(f"Raising LimitExceededError (failed after {config.max_retries} retries): {e}")
-            raise LimitExceededError(
-                type="custom",
-                message=f"Failed after {config.max_retries} retries: {e}",
-                limit=config.max_retries,
-                value=config.max_retries,
-            ) from e
+
+            if self.should_retry(e): # it's a retryable exception that was tried config.max_retries times
+                print(f"Raising LimitExceededError (failed after {config.max_retries} retries): {e}")
+                raise LimitExceededError(
+                    type="custom",
+                    message=f"Failed after {config.max_retries} retries: {e}",
+                    limit=config.max_retries,
+                    value=config.max_retries,
+                ) from e
+            else:
+                raise e
         total_time = time.monotonic() - time_start
         if model_output.time:
             report_sample_waiting_time(total_time - model_output.time)
