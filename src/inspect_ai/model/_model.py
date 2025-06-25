@@ -576,7 +576,7 @@ class Model:
             stop = stop_never
 
         @retry(
-            wait=wait_exponential_jitter(initial=3, max=(30 * 60), jitter=3),
+            wait=wait_exponential_jitter(initial=3, max=(15 * 60), jitter=3),
             retry=retry_if_exception(self.should_retry),
             stop=stop,
             before_sleep=functools.partial(log_model_retry, self.api.model_name),
