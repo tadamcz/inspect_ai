@@ -66,7 +66,6 @@ from ._generate_config import (
 )
 from ._model_call import ModelCall
 from ._model_output import ModelOutput, ModelUsage
-from ..solver import SampleLimitExceededError
 
 logger = logging.getLogger(__name__)
 
@@ -569,6 +568,7 @@ class Model:
         except Exception as e:
             if self.should_retry(e): # it's a retryable exception that was tried config.max_retries times
                 print(f"Raising SampleLimitExceededError (failed after {config.max_retries} retries): {e}")
+                from inspect_ai.solver._limit import SampleLimitExceededError
                 raise SampleLimitExceededError(
                     type="custom",
                     message=f"Failed after {config.max_retries} retries: {e}",
