@@ -30,6 +30,7 @@ from inspect_ai._util.content import (
     ContentReasoning,
     ContentText,
 )
+
 from inspect_ai._util.hooks import init_hooks, override_api_key, send_telemetry
 from inspect_ai._util.interrupt import check_sample_interrupt
 from inspect_ai._util.logger import warn_once
@@ -65,6 +66,7 @@ from ._generate_config import (
 )
 from ._model_call import ModelCall
 from ._model_output import ModelOutput, ModelUsage
+from ..solver import SampleLimitExceededError
 
 logger = logging.getLogger(__name__)
 
@@ -446,7 +448,7 @@ class Model:
             stop = stop_never
 
         @retry(
-            wait=wait_exponential_jitter(initial=3, max=(30 * 60), jitter=3),
+            wait=wait_exponential_jitter(initial=3, max=(15 * 60), jitter=3),
             retry=retry_if_exception(self.should_retry),
             stop=stop,
             before_sleep=functools.partial(log_model_retry, self.api.model_name),
@@ -561,7 +563,20 @@ class Model:
         # call the model (this will so retries, etc., so report waiting time
         # as elapsed time - actual time for successful model call)
         time_start = time.monotonic()
-        model_output = await generate()
+        # Hacky approach in our fork of Inspect for Gemini 2.5 evaluations
+        try:
+            model_output, event = await generate()
+        except Exception as e:
+            if self.should_retry(e): # it's a retryable exception that was tried config.max_retries times
+                print(f"Raising SampleLimitExceededError (failed after {config.max_retries} retries): {e}")
+                raise SampleLimitExceededError(
+                    type="custom",
+                    message=f"Failed after {config.max_retries} retries: {e}",
+                    limit=config.max_retries,
+                    value=config.max_retries,
+                ) from e
+            else:
+                raise e
         total_time = time.monotonic() - time_start
         if model_output.time:
             report_sample_waiting_time(total_time - model_output.time)
