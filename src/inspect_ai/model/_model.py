@@ -564,7 +564,7 @@ class Model:
         time_start = time.monotonic()
         # Hacky approach in our fork of Inspect for Gemini 2.5 evaluations
         try:
-            model_output, event = await generate()
+            model_output = await generate()
         except Exception as e:
             if self.should_retry(e): # it's a retryable exception that was tried config.max_retries times
                 print(f"Raising SampleLimitExceededError (failed after {config.max_retries} retries): {e}")
