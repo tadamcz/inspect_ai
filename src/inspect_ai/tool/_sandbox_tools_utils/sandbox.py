@@ -175,7 +175,7 @@ async def _open_executable_for_arch(
                 warn_once(logger, msg)
 
         # S3 Download Attempt
-        if install_state == "clean":
+        if install_state in ["clean", "pypi"]:
             if await _download_from_s3(executable_name):
                 async with _open_executable(executable_name) as f:
                     trace_message(
